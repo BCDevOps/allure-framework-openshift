@@ -20,7 +20,7 @@ usage () {
 
   Examples:
     $0 -n ggpixq init
-    $0 -n ggpixq -r https://github.com/WadeBarnes/matomo-openshift.git init
+    $0 -n ggpixq -r https://github.com/BcDevOps/allure-framework-openshift.git init
 
     $0 build
 
@@ -237,7 +237,7 @@ updateDeploymentParams() {
 
 deployApp(){
   (
-    _appName=${1:-matomo}
+    _appName=${1:-allure}
 
     # Deploy or update the configuration ...
     updateDeploymentParams ${DEPLOYMENT_ENV_NAME}
@@ -259,7 +259,7 @@ deployApp(){
 deleteResources()
 {
   (
-    _appName=${1:-matomo}
+    _appName=${1:-allure}
     oc -n $(getProjectName) delete all,secret,pvc,configmap -l app=${_appName}
   )
 }
@@ -267,7 +267,7 @@ deleteResources()
 cleanResources()
 {
   (
-    _appName=${1:-matomo}
+    _appName=${1:-allure}
     oc -n $(getProjectName) delete all,configmap -l app=${_appName}
   )
 }
@@ -305,17 +305,17 @@ case "${_cmd}" in
     ;;
 
   deploy)
-    appName=${1:-matomo}
+    appName=${1:-allure}
     deployApp ${appName}
     ;;
 
   clean)
-    appName=${1:-matomo}
+    appName=${1:-allure}
     cleanResources ${appName}
     ;;
 
   delete)
-    appName=${1:-matomo}
+    appName=${1:-allure}
     deleteResources ${appName}
     ;;
 
