@@ -1,0 +1,6 @@
+*_DeploymentConfig.json
+*_BuildConfig.json
+*.local.*
+*.crt
+*.pem
+*.key
