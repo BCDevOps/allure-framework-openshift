@@ -15,7 +15,7 @@ labels:
 
 # Allure Framework OpenShift
 
-Allure is a fully featured web analytics server and is a great alternative to Google Analytics when data ownership and privacy compliance are a concern.
+Allure is a flexible, lightweight multi-language test report tool.
 
 [Allure Framework OpenShift](https://github.com/BCDevOps/allure-framework-openshift) provides a set of OpenShift configurations to set up an instance of the Allure service and Allure UI. See: [docs.qameta.io/allure](https://docs.qameta.io/allure/) for additional details regarding Allure Framework.
 
