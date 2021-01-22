@@ -8,7 +8,7 @@ SCRIPT_HOME="$( cd "$( dirname "$0" )" && pwd )"
 usage () {
   cat <<-EOF
 
-  A script to automate and manage the build and deployment of motomo instance(s) within a given environment.
+  A script to automate and manage the build and deployment of allure instance(s) within a given environment.
   Steps:
     - Initialize the environment using the 'init' command.
     - Publish the build configuration(s) using the 'build' command.
@@ -61,17 +61,17 @@ usage () {
     scaleUp
       - Scale up one or more pods.
         For example;
-          $0 -e prod scaleUp motomo
+          $0 -e prod scaleUp allure-service
 
     scaleDown
       - Scale down one or more pods.
         For example;
-          $0 -e prod scaleDown motomo
+          $0 -e prod scaleDown allure-service
 
     recycle
       - Recycle one or more pods.
         For example;
-          $0 -e prod recycle motomo
+          $0 -e prod recycle allure-service
 EOF
 }
 
