@@ -14,6 +14,7 @@ objects:
         name: ${NAME}
         app: ${APP_NAME}
         app-group: ${APP_GROUP}
+
   - kind: BuildConfig
     apiVersion: v1
     metadata:
@@ -39,6 +40,7 @@ objects:
           name: ${NAME}:${OUTPUT_IMAGE_TAG}
       triggers:
         - type: ConfigChange
+
 parameters:
   - name: NAME
     displayName: Name
