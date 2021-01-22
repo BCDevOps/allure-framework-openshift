@@ -1,4 +1,4 @@
-FROM frankescobar/allure-docker-service:2.13.6
+FROM frankescobar/allure-docker-service:2.13.8
 
 USER root
 
