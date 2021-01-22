@@ -1,0 +1,258 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: ${NAME}-template
+  labels:
+    name: ${NAME}${NAME}-template
+    app: ${APP_NAME}
+    app-group: ${NAME}
+objects:
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: ${NAME}
+      generation: 1
+      labels:
+        app: ${NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+    spec:
+      strategy:
+        type: Rolling
+      triggers:
+        - type: ConfigChange
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - ${NAME}
+            from:
+              kind: ImageStreamTag
+              namespace: ${IMAGE_NAMESPACE}
+              name: ${SOURCE_IMAGE_NAME}:${TAG_NAME}
+      replicas: 1
+      test: false
+      selector:
+        app: ${NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+      template:
+        metadata:
+          labels:
+            app: ${NAME}
+            app-group: ${NAME}
+            env: ${TAG_NAME}
+        spec:
+          volumes:
+            - name: ${NAME}-data
+              persistentVolumeClaim:
+                claimName: ${NAME}-data
+          containers:
+            - name: ${NAME}
+              ports:
+                - containerPort: 5050
+                  protocol: TCP
+              readinessProbe:
+                failureThreshold: 3
+                initialDelaySeconds: 1
+                periodSeconds: 10
+                successThreshold: 1
+                tcpSocket:
+                  port: 5050
+                timeoutSeconds: 5
+              livenessProbe:
+                failureThreshold: 3
+                initialDelaySeconds: 1
+                periodSeconds: 10
+                successThreshold: 1
+                tcpSocket:
+                  port: 5050
+                timeoutSeconds: 5
+              env:
+                - name: CHECK_RESULTS_EVERY_SECONDS
+                  value: NONE
+                - name: KEEP_HISTORY
+                  value: ${KEEP_HISTORY}
+                - name: KEEP_HISTORY_LATEST
+                  value: ${KEEP_HISTORY_LATEST}
+                - name: SECURITY_ENABLED
+                  value: ${SECURITY_ENABLED}
+                - name: SECURITY_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-admin
+                      key: username
+                - name: SECURITY_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${NAME}-admin
+                      key: password
+              volumeMounts:
+                - mountPath: /app/projects
+                  name: ${NAME}-data
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+                limits:
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-data
+      labels:
+        name: ${NAME}-data
+        app: ${APP_NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+    spec:
+      storageClassName: ${PERSISTENT_VOLUME_CLASS}
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: ${PERSISTENT_VOLUME_SIZE}
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: ${NAME}
+      labels:
+        name: ${NAME}
+        app: ${APP_NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+    spec:
+      host: ${ALLURE_URL}
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: edge
+      to:
+        kind: Service
+        name: ${NAME}
+  - kind: Secret
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-admin
+      labels:
+        name: ${NAME}-admin
+        app: ${APP_NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+    stringData:
+      username: ${ALLURE_ADMIN_USER}
+      password: ${ALLURE_ADMIN_PASSWORD}
+    type: Opaque
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: ${NAME}
+      labels:
+        app: ${NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+    spec:
+      ports:
+        - name: 5050-tcp
+          protocol: TCP
+          port: 5050
+          targetPort: 5050
+      selector:
+        app: ${NAME}
+        app-group: ${NAME}
+        env: ${TAG_NAME}
+      type: ClusterIP
+      sessionAffinity: None
+parameters:
+  - name: NAME
+    displayName: Name
+    description: The name assigned to all of the OpenShift resources associated to the server instance.
+    required: true
+    value: allure
+  - name: APP_NAME
+    displayName: App Name
+    description: Used to group components together in the OpenShift console.
+    required: true
+    value: allure
+  - name: ROLE
+    displayName: Role
+    description: The role of this service within the application - used for Network Policies
+    required: true
+    value: allure-api
+  - name: IMAGE_NAMESPACE
+    displayName: Image Namespace
+    required: true
+    description: The namespace of the OpenShift project containing the imagestream for the application.
+    value: ""
+  - name: SOURCE_IMAGE_NAME
+    displayName: Source Image Name
+    description: The name of the image to use for this resource.
+    required: true
+    value: allure
+  - name: TAG_NAME
+    displayName: Environment TAG name
+    description: The TAG name for this environment, e.g., dev, test, prod
+    required: true
+    value: prod
+  - name: KEEP_HISTORY
+    displayName: Keep Allure Project History
+    description: Enables Allure to work with project history and trends.
+    required: true
+    value: "1"
+  - name: KEEP_HISTORY_LATEST
+    displayName: Allure Project History Size
+    description: Defines the size of the Allure project history to be stored.
+    required: true
+    value: "25"
+  - name: ALLURE_ADMIN_USER
+    displayName: Allure Admin User
+    description: Username for Allure's admin user.  Needs to be base64 encoded.
+    required: true
+    generate: expression
+    from: '[a-zA-Z0-9]{10}'
+  - name: ALLURE_ADMIN_PASSWORD
+    displayName: Allure Admin Password
+    description: Password for Allure's admin user.  Needs to be base64 encoded.
+    required: true
+    generate: expression
+    from: '[a-zA-Z0-9]{10}'
+  - name: SECURITY_ENABLED
+    displayName: Enable Allure Security
+    description: The flag indicating wether basic HTTP auth should be enabled (enabled by default).
+    required: true
+    value: "1"
+  - name: ALLURE_URL
+    displayName: Allure URL
+    description: The public domain endpoint for Allure. A value will be created by default if not specified.
+    required: false
+    value: ""
+  - name: PERSISTENT_VOLUME_SIZE
+    displayName: Persistent Volume Size
+    description: The size of the persistent volume , e.g. 512Mi, 1Gi, 2Gi.
+    required: true
+    value: 2Gi
+  - name: PERSISTENT_VOLUME_CLASS
+    displayName: Persistent Volume Class name
+    description: The class of the volume; gluster-file, gluster-block, netapp-file-standard, netapp-file-standard, netapp-block-standard
+    required: false
+    value: netapp-file-standard
+  - name: CPU_REQUEST
+    displayName: Resources CPU Request
+    description: The resources CPU request (in cores) for this build.
+    required: true
+    value: 100m
+  - name: CPU_LIMIT
+    displayName: Resources CPU Limit
+    description: The resources CPU limit (in cores) for this build.
+    required: true
+    value: 250m
+  - name: MEMORY_REQUEST
+    displayName: Resources Memory Request
+    description: The resources Memory request (in Mi, Gi, etc) for this build.
+    required: true
+    value: 128Mi
+  - name: MEMORY_LIMIT
+    displayName: Resources Memory Limit
+    description: The resources Memory limit (in Mi, Gi, etc) for this build.
+    required: true
+    value: 1Gi
