@@ -4,8 +4,6 @@ metadata:
   name: ${NAME}-template
   labels:
     name: ${NAME}-template
-    app: ${APP_NAME}
-    app-group: ${NAME}
 objects:
   - kind: NetworkSecurityPolicy
     apiVersion: security.devops.gov.bc.ca/v1alpha1
@@ -15,6 +13,7 @@ objects:
         name: ${NAME}${SUFFIX}
         app: ${APP_NAME}${SUFFIX}
         app-group: ${APP_GROUP}
+        role: allure-ui
         env: ${TAG_NAME}
     spec:
       description: |
@@ -33,11 +32,12 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: ${NAME}
+      name: ${NAME}${SUFFIX}
       generation: 1
       labels:
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
-        app-group: ${NAME}
+        app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -49,7 +49,7 @@ objects:
           imageChangeParams:
             automatic: true
             containerNames:
-              - ${NAME}
+              - ${NAME}${SUFFIX}
             from:
               kind: ImageStreamTag
               namespace: ${IMAGE_NAMESPACE}
@@ -57,21 +57,23 @@ objects:
       replicas: 1
       test: false
       selector:
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
-        app-group: ${NAME}
+        app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
       template:
         metadata:
           labels:
+            name: ${NAME}${SUFFIX}
             app: ${APP_NAME}
-            app-group: ${NAME}
+            app-group: ${APP_GROUP}
             role: allure-ui
             env: ${TAG_NAME}
         spec:
           volumes: []
           containers:
-            - name: ${NAME}
+            - name: ${NAME}${SUFFIX}
               ports:
                 - containerPort: 5252
                   protocol: TCP
@@ -93,9 +95,9 @@ objects:
                 timeoutSeconds: 5
               env:
                 - name: ALLURE_DOCKER_PUBLIC_API_URL
-                  value: ${ALLURE_DOCKER_PUBLIC_API_URL}
+                  value: ${ALLURE_PUBLIC_API_URL}
                 - name: ALLURE_DOCKER_PUBLIC_API_URL_PREFIX
-                  value: ${ALLURE_DOCKER_PUBLIC_API_URL_PREFIX}
+                  value: ${ALLURE_PUBLIC_API_URL_PREFIX}
               volumeMounts: []
               resources:
                 requests:
@@ -108,11 +110,11 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: ${NAME}
+      name: ${NAME}${SUFFIX}
       labels:
-        name: ${NAME}
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
-        app-group: ${NAME}
+        app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -122,15 +124,16 @@ objects:
         termination: edge
       to:
         kind: Service
-        name: ${NAME}
+        name: ${NAME}${SUFFIX}
 
   - kind: Service
     apiVersion: v1
     metadata:
-      name: ${NAME}
+      name: ${NAME}${SUFFIX}
       labels:
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
-        app-group: ${NAME}
+        app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -140,8 +143,9 @@ objects:
           port: 5252
           targetPort: 5252
       selector:
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
-        app-group: ${NAME}
+        app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
       type: ClusterIP
@@ -173,7 +177,7 @@ parameters:
     description: The role of this service within the application - used for Network Policies
     required: true
     value: allure-ui
-  - name: NAMESPACE_NAME
+  - name: NAMESPACE
     displayName: Namespace Name
     description: The name of the namespace being deployed to.
     required: true
@@ -198,12 +202,12 @@ parameters:
     description: The public domain endpoint for Allure UI. A value will be created by default if not specified.
     required: false
     value: ""
-  - name: ALLURE_DOCKER_PUBLIC_API_URL
+  - name: ALLURE_PUBLIC_API_URL
     displayName: Allure API URL
     description: Allure API URL.
     required: true
     value: ""
-  - name: ALLURE_DOCKER_PUBLIC_API_URL_PREFIX
+  - name: ALLURE_PUBLIC_API_URL_PREFIX
     displayName: Allure API URL Prefix
     description: Allure API URL prefix.
     required: false

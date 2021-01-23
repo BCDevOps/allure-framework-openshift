@@ -4,8 +4,6 @@ metadata:
   name: ${NAME}-template
   labels:
     name: ${NAME}-template
-    app: ${APP_NAME}
-    app-group: ${APP_GROUP}
 objects:
   - kind: DeploymentConfig
     apiVersion: v1
@@ -13,7 +11,8 @@ objects:
       name: ${NAME}${SUFFIX}
       generation: 1
       labels:
-        app: ${NAME}${SUFFIX}
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
         app-group: ${APP_GROUP}
         role: allure-service
         env: ${TAG_NAME}
@@ -34,15 +33,18 @@ objects:
       replicas: 1
       test: false
       selector:
-        app: ${NAME}${SUFFIX}
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
         app-group: ${APP_GROUP}
         role: allure-service
         env: ${TAG_NAME}
       template:
         metadata:
           labels:
-            app: ${NAME}${SUFFIX}
+            name: ${NAME}${SUFFIX}
+            app: ${APP_NAME}
             app-group: ${APP_GROUP}
+            role: allure-service
             env: ${TAG_NAME}
         spec:
           volumes:
@@ -84,22 +86,22 @@ objects:
                 - name: SECURITY_USER
                   valueFrom:
                     secretKeyRef:
-                      name: ${NAME}${SUFFIX}-credentials
+                      name: ${NAME}${SUFFIX}
                       key: username
                 - name: SECURITY_PASS
                   valueFrom:
                     secretKeyRef:
-                      name: ${NAME}${SUFFIX}-credentials
+                      name: ${NAME}${SUFFIX}
                       key: password
                 - name: SECURITY_VIEWER_USER
                   valueFrom:
                     secretKeyRef:
-                      name: ${NAME}${SUFFIX}-credentials
+                      name: ${NAME}${SUFFIX}
                       key: public-username
                 - name: SECURITY_VIEWER_PASS
                   valueFrom:
                     secretKeyRef:
-                      name: ${NAME}${SUFFIX}-credentials
+                      name: ${NAME}${SUFFIX}
                       key: public-password
               volumeMounts:
                 - mountPath: /app/projects
@@ -117,7 +119,7 @@ objects:
     metadata:
       name: ${NAME}${SUFFIX}-data
       labels:
-        name: ${NAME}${SUFFIX}-data
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
         app-group: ${APP_GROUP}
         role: allure-service
@@ -152,9 +154,9 @@ objects:
   - kind: Secret
     apiVersion: v1
     metadata:
-      name: ${NAME}${SUFFIX}-credentials
+      name: ${NAME}${SUFFIX}
       labels:
-        name: ${NAME}${SUFFIX}-credentials
+        name: ${NAME}${SUFFIX}
         app: ${APP_NAME}
         app-group: ${APP_GROUP}
         role: allure-service
@@ -172,7 +174,7 @@ objects:
       name: ${NAME}${SUFFIX}
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
         app-group: ${APP_GROUP}
         role: allure-service
         env: ${TAG_NAME}
@@ -183,7 +185,8 @@ objects:
           port: 5050
           targetPort: 5050
       selector:
-        app: ${NAME}${SUFFIX}
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
         app-group: ${APP_GROUP}
         role: allure-service
         env: ${TAG_NAME}
@@ -225,7 +228,7 @@ parameters:
     displayName: Source Image Name
     description: The name of the image to use for this resource.
     required: true
-    value: allure
+    value: allure-service
   - name: TAG_NAME
     displayName: Environment TAG name
     description: The TAG name for this environment, e.g., dev, test, prod
