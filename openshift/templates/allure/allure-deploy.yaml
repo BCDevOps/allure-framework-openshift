@@ -83,6 +83,8 @@ objects:
                   value: ${SECURITY_ENABLED}
                 - name: MAKE_VIEWER_ENDPOINTS_PUBLIC
                   value: ${MAKE_VIEWER_ENDPOINTS_PUBLIC}
+                - name: URL_PREFIX
+                  value: ${ALLURE_URL_PATH}
                 - name: SECURITY_USER
                   valueFrom:
                     secretKeyRef:
@@ -142,8 +144,11 @@ objects:
         app-group: ${APP_GROUP}
         role: allure-service
         env: ${TAG_NAME}
+      annotations:
+        haproxy.router.openshift.io/rewrite-target: /
     spec:
       host: ${ALLURE_URL}
+      path: ${ALLURE_URL_PATH}
       tls:
         insecureEdgeTerminationPolicy: Redirect
         termination: edge
@@ -283,6 +288,11 @@ parameters:
     description: The public domain endpoint for Allure. A value will be created by default if not specified.
     required: false
     value: ""
+  - name: ALLURE_URL_PATH
+    displayName: Allure URL Path
+    description: The path at which the Allure service will be exposed on the route.
+    required: true
+    value: "/api"
   - name: PERSISTENT_VOLUME_SIZE
     displayName: Persistent Volume Size
     description: The size of the persistent volume , e.g. 512Mi, 1Gi, 2Gi.
