@@ -98,8 +98,6 @@ objects:
                   value: ${ALLURE_PUBLIC_API_URL}
                 - name: ALLURE_DOCKER_PUBLIC_API_URL_PREFIX
                   value: ${ALLURE_PUBLIC_API_URL_PREFIX}
-                - name: URL_PREFIX
-                  value: ${ALLURE_UI_URL_PATH}
               volumeMounts: []
               resources:
                 requests:
@@ -119,11 +117,8 @@ objects:
         app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
-      annotations:
-        haproxy.router.openshift.io/rewrite-target: /
     spec:
       host: ${ALLURE_UI_URL}
-      path: ${ALLURE_UI_URL_PATH}
       tls:
         insecureEdgeTerminationPolicy: Redirect
         termination: edge
@@ -207,11 +202,6 @@ parameters:
     description: The public domain endpoint for Allure UI. A value will be created by default if not specified.
     required: false
     value: ""
-  - name: ALLURE_UI_URL_PATH
-    displayName: Allure UI URL Path
-    description: The path at which the Allure UI service will be exposed on the route.
-    required: true
-    value: "/dashboard"
   - name: ALLURE_PUBLIC_API_URL
     displayName: Allure API URL
     description: Allure API URL.
