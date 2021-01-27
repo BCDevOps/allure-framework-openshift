@@ -1,4 +1,4 @@
-FROM frankescobar/allure-docker-service-ui:7.0.0
+FROM frankescobar/allure-docker-service-ui:7.0.3
 
 USER root
 

@@ -1,0 +1,234 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: ${NAME}-template
+  labels:
+    name: ${NAME}-template
+objects:
+  - kind: NetworkSecurityPolicy
+    apiVersion: security.devops.gov.bc.ca/v1alpha1
+    metadata:
+      name: ${NAME}${SUFFIX}
+      labels:
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}
+        role: allure-ui
+        env: ${TAG_NAME}
+    spec:
+      description: |
+        Allow the allure-ui pods to communicate with allure-service.
+      source:
+        - - role=allure-ui
+          - app=${APP_NAME}${SUFFIX}
+          - env=${TAG_NAME}
+          - $namespace=${NAMESPACE}-${TAG_NAME}
+      destination:
+        - - role=allure-service
+          - app=${APP_NAME}${SUFFIX}
+          - env=${TAG_NAME}
+          - $namespace=${NAMESPACE}-${TAG_NAME}
+
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: ${NAME}${SUFFIX}
+      generation: 1
+      labels:
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
+        app-group: ${APP_GROUP}
+        role: allure-ui
+        env: ${TAG_NAME}
+    spec:
+      strategy:
+        type: Rolling
+      triggers:
+        - type: ConfigChange
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - ${NAME}${SUFFIX}
+            from:
+              kind: ImageStreamTag
+              namespace: ${IMAGE_NAMESPACE}
+              name: ${SOURCE_IMAGE_NAME}:${TAG_NAME}
+      replicas: 1
+      test: false
+      selector:
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
+        app-group: ${APP_GROUP}
+        role: allure-ui
+        env: ${TAG_NAME}
+      template:
+        metadata:
+          labels:
+            name: ${NAME}${SUFFIX}
+            app: ${APP_NAME}
+            app-group: ${APP_GROUP}
+            role: allure-ui
+            env: ${TAG_NAME}
+        spec:
+          volumes: []
+          containers:
+            - name: ${NAME}${SUFFIX}
+              ports:
+                - containerPort: 5252
+                  protocol: TCP
+              readinessProbe:
+                failureThreshold: 3
+                initialDelaySeconds: 1
+                periodSeconds: 10
+                successThreshold: 1
+                tcpSocket:
+                  port: 5252
+                timeoutSeconds: 5
+              livenessProbe:
+                failureThreshold: 3
+                initialDelaySeconds: 1
+                periodSeconds: 10
+                successThreshold: 1
+                tcpSocket:
+                  port: 5252
+                timeoutSeconds: 5
+              env:
+                - name: ALLURE_DOCKER_PUBLIC_API_URL
+                  value: ${ALLURE_PUBLIC_API_URL}
+                - name: ALLURE_DOCKER_PUBLIC_API_URL_PREFIX
+                  value: ${ALLURE_PUBLIC_API_URL_PREFIX}
+              volumeMounts: []
+              resources:
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+                limits:
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
+
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: ${NAME}${SUFFIX}
+      labels:
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
+        app-group: ${APP_GROUP}
+        role: allure-ui
+        env: ${TAG_NAME}
+    spec:
+      host: ${ALLURE_UI_URL}
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: edge
+      to:
+        kind: Service
+        name: ${NAME}${SUFFIX}
+
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: ${NAME}${SUFFIX}
+      labels:
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
+        app-group: ${APP_GROUP}
+        role: allure-ui
+        env: ${TAG_NAME}
+    spec:
+      ports:
+        - name: 5252-tcp
+          protocol: TCP
+          port: 5252
+          targetPort: 5252
+      selector:
+        name: ${NAME}${SUFFIX}
+        app: ${APP_NAME}
+        app-group: ${APP_GROUP}
+        role: allure-ui
+        env: ${TAG_NAME}
+      type: ClusterIP
+      sessionAffinity: None
+
+parameters:
+  - name: NAME
+    displayName: Name
+    description: The name assigned to all of the OpenShift resources associated to the server instance.
+    required: true
+    value: allure-ui
+  - name: SUFFIX
+    displayName: Suffix
+    description: A name suffix used for all objects.
+    required: false
+    value:
+  - name: APP_NAME
+    displayName: App Name
+    description: Used to group components together in the OpenShift console.
+    required: true
+    value: allure
+  - name: APP_GROUP
+    displayName: App Group
+    description: The name assigned to all of the deployments in this project.
+    required: true
+    value: allure
+  - name: ROLE
+    displayName: Role
+    description: The role of this service within the application - used for Network Policies
+    required: true
+    value: allure-ui
+  - name: NAMESPACE
+    displayName: Namespace Name
+    description: The name of the namespace being deployed to.
+    required: true
+    value: ""
+  - name: IMAGE_NAMESPACE
+    displayName: Image Namespace
+    required: true
+    description: The namespace of the OpenShift project containing the imagestream for the application.
+    value: ""
+  - name: SOURCE_IMAGE_NAME
+    displayName: Source Image Name
+    description: The name of the image to use for this resource.
+    required: true
+    value: allure-ui
+  - name: TAG_NAME
+    displayName: Environment TAG name
+    description: The TAG name for this environment, e.g., dev, test, prod
+    required: true
+    value: prod
+  - name: ALLURE_UI_URL
+    displayName: Allure UI URL
+    description: The public domain endpoint for Allure UI. A value will be created by default if not specified.
+    required: false
+    value: ""
+  - name: ALLURE_PUBLIC_API_URL
+    displayName: Allure API URL
+    description: Allure API URL.
+    required: true
+    value: ""
+  - name: ALLURE_PUBLIC_API_URL_PREFIX
+    displayName: Allure API URL Prefix
+    description: Allure API URL prefix.
+    required: false
+    value: ""
+  - name: CPU_REQUEST
+    displayName: Resources CPU Request
+    description: The resources CPU request (in cores) for this build.
+    required: true
+    value: 100m
+  - name: CPU_LIMIT
+    displayName: Resources CPU Limit
+    description: The resources CPU limit (in cores) for this build.
+    required: true
+    value: 250m
+  - name: MEMORY_REQUEST
+    displayName: Resources Memory Request
+    description: The resources Memory request (in Mi, Gi, etc) for this build.
+    required: true
+    value: 128Mi
+  - name: MEMORY_LIMIT
+    displayName: Resources Memory Limit
+    description: The resources Memory limit (in Mi, Gi, etc) for this build.
+    required: true
+    value: 256Mi
