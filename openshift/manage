@@ -256,8 +256,6 @@ deployApp(){
     if dcExists ${_appName}; then
       OPERATION=update genDepls.sh -u -l
     else
-      echoWarning "\nApplying required network security policies."
-      oc -n ${PROJECT_NAMESPACE}-${DEPLOYMENT_ENV_NAME} process -f ./templates/nsp/deploy.yaml -p NAMESPACE=${PROJECT_NAMESPACE}-${DEPLOYMENT_ENV_NAME} | oc create -f -
       genDepls.sh -l
     fi
 
