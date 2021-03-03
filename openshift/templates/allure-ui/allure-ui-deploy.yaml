@@ -5,29 +5,31 @@ metadata:
   labels:
     name: ${NAME}-template
 objects:
-  - kind: NetworkSecurityPolicy
-    apiVersion: security.devops.gov.bc.ca/v1alpha1
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
     metadata:
-      name: ${NAME}${SUFFIX}
+      name: ${NAME}${SUFFIX}-allow-ingress
       labels:
-        name: ${NAME}${SUFFIX}
+        name: ${NAME}${SUFFIX}-allow-ingress
         app: ${APP_NAME}${SUFFIX}
         app-group: ${APP_GROUP}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
       description: |
-        Allow the allure-ui pods to communicate with allure-service.
-      source:
-        - - role=allure-ui
-          - app=${APP_NAME}${SUFFIX}
-          - env=${TAG_NAME}
-          - $namespace=${NAMESPACE}-${TAG_NAME}
-      destination:
-        - - role=allure-service
-          - app=${APP_NAME}${SUFFIX}
-          - env=${TAG_NAME}
-          - $namespace=${NAMESPACE}-${TAG_NAME}
+        Allow traffic from routes into the allure-ui container(s).
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  network.openshift.io/policy-group: ingress
+      podSelector:
+        matchLabels:
+          role: allure-ui
+          app: ${APP_NAME}${SUFFIX}
+          env: ${TAG_NAME}
+      policyTypes:
+        - Ingress
 
   - kind: DeploymentConfig
     apiVersion: v1
@@ -177,11 +179,6 @@ parameters:
     description: The role of this service within the application - used for Network Policies
     required: true
     value: allure-ui
-  - name: NAMESPACE
-    displayName: Namespace Name
-    description: The name of the namespace being deployed to.
-    required: true
-    value: ""
   - name: IMAGE_NAMESPACE
     displayName: Image Namespace
     required: true
@@ -210,8 +207,8 @@ parameters:
   - name: ALLURE_PUBLIC_API_URL_PREFIX
     displayName: Allure API URL Prefix
     description: Allure API URL prefix.
-    required: false
-    value: ""
+    required: true
+    value: "/api"
   - name: CPU_REQUEST
     displayName: Resources CPU Request
     description: The resources CPU request (in cores) for this build.
