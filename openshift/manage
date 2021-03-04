@@ -231,14 +231,22 @@ updateParams() {
     _configType=${1}
     _imageTag=${2}
 
+    _allureURL="allure-${PROJECT_NAMESPACE}-${_imageTag}.apps.silver.devops.gov.bc.ca"
+
     _paramFiles=$(find . -name "*${_configType}.local.param")
     for paramFile in ${_paramFiles}; do
       # Uncomment and update the required deployment settings ...
       _parameterFilters="/TAG_NAME/s~^#.~~;"
       _parameterFilters="${_parameterFilters}/IMAGE_NAMESPACE/s~^#.~~;"
       _parameterFilters="${_parameterFilters}/NAMESPACE_NAME/s~^#.~~;"
+      _parameterFilters="${_parameterFilters}/ALLURE_UI_URL/s~^#.~~;"
+      _parameterFilters="${_parameterFilters}/ALLURE_PUBLIC_API_URL/s~^#.~~;"
+      _parameterFilters="${_parameterFilters}/ALLURE_URL/s~^#.~~;"
       _parameterFilters="${_parameterFilters}s~\(^TAG_NAME=\).*$~\1${_imageTag}~;"
       _parameterFilters="${_parameterFilters}s~\(^NAMESPACE_NAME=\).*$~\1${PROJECT_NAMESPACE}~;"
+      _parameterFilters="${_parameterFilters}s~\(^ALLURE_UI_URL=\).*$~\1${_allureURL}~;"
+      _parameterFilters="${_parameterFilters}s~\(^ALLURE_PUBLIC_API_URL=\).*$~\1https://${_allureURL}~;"
+      _parameterFilters="${_parameterFilters}s~\(^ALLURE_URL=\).*$~\1${_allureURL}~;"
 
       cat ${paramFile} | sed ${_parameterFilters} > ${paramFile}.tmp
       rm ${paramFile}
@@ -253,7 +261,7 @@ deployApp(){
 
     # Deploy or update the configuration ...
     updateDeploymentParams ${DEPLOYMENT_ENV_NAME}
-    if dcExists ${_appName}; then
+    if dcExists "allure-ui"; then
       OPERATION=update genDepls.sh -u -l
     else
       genDepls.sh -l
@@ -272,7 +280,7 @@ deleteResources()
 {
   (
     _appName=${1:-allure}
-    oc -n $(getProjectName) delete all,secret,pvc,configmap,nsp -l app=${_appName}
+    oc -n $(getProjectName) delete all,secret,pvc,configmap,networkpolicy -l app=${_appName}
   )
 }
 
@@ -280,7 +288,7 @@ cleanResources()
 {
   (
     _appName=${1:-allure}
-    oc -n $(getProjectName) delete all,configmap,nsp -l app=${_appName}
+    oc -n $(getProjectName) delete all,configmap,networkpolicy -l app=${_appName}
   )
 }
 
