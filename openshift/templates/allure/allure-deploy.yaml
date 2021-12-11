@@ -131,6 +131,8 @@ objects:
                     secretKeyRef:
                       name: ${NAME}${SUFFIX}
                       key: public-password
+                - name: LOG4J_FORMAT_MSG_NO_LOOKUPS
+                  value: 'true'
               volumeMounts:
                 - mountPath: /app/projects
                   name: ${NAME}${SUFFIX}-data
