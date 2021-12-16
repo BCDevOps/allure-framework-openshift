@@ -81,4 +81,4 @@ parameters:
     displayName: Output Image Tag
     description: The tag given to the built image.
     required: true
-    value: 2.13.8
+    value: 2.17.2
