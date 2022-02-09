@@ -1,9 +1,9 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: ${NAME}-template
+  name: ${NAME}${SUFFIX}-template
   labels:
-    name: ${NAME}-template
+    name: ${NAME}${SUFFIX}-template
 objects:
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1
@@ -12,7 +12,7 @@ objects:
       labels:
         name: ${NAME}${SUFFIX}-allow-ingress
         app: ${APP_NAME}${SUFFIX}
-        app-group: ${APP_GROUP}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
     spec:
@@ -38,8 +38,8 @@ objects:
       generation: 1
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
     spec:
@@ -60,16 +60,16 @@ objects:
       test: false
       selector:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
       template:
         metadata:
           labels:
             name: ${NAME}${SUFFIX}
-            app: ${APP_NAME}
-            app-group: ${APP_GROUP}
+            app: ${APP_NAME}${SUFFIX}
+            app-group: ${APP_GROUP}${SUFFIX}
             role: allure-service
             env: ${TAG_NAME}
         spec:
@@ -148,8 +148,8 @@ objects:
       name: ${NAME}${SUFFIX}-data
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
     spec:
@@ -166,8 +166,8 @@ objects:
       name: ${NAME}${SUFFIX}
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
       annotations:
@@ -188,8 +188,8 @@ objects:
       name: ${NAME}${SUFFIX}
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
     stringData:
@@ -205,8 +205,8 @@ objects:
       name: ${NAME}${SUFFIX}
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
     spec:
@@ -217,8 +217,8 @@ objects:
           targetPort: 5050
       selector:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-service
         env: ${TAG_NAME}
       type: ClusterIP
@@ -323,7 +323,7 @@ parameters:
     displayName: Persistent Volume Size
     description: The size of the persistent volume , e.g. 512Mi, 1Gi, 2Gi.
     required: true
-    value: 2Gi
+    value: 5Gi
   - name: PERSISTENT_VOLUME_CLASS
     displayName: Persistent Volume Class name
     description: The class of the volume; gluster-file, gluster-block, netapp-file-standard, netapp-file-standard, netapp-block-standard
