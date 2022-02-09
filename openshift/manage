@@ -20,11 +20,13 @@ usage () {
 
   Examples:
     $0 -n ggpixq init
+    $0 -n ggpixq -s mobile init
     $0 -n ggpixq -r https://github.com/BcDevOps/allure-framework-openshift.git init
 
     $0 build
 
     $0 -e prod deploy
+    $0 -e prod -s mobile deploy
 
     $0 -e tools clean
     $0 -e prod clean
@@ -33,6 +35,10 @@ usage () {
   ========
     -n Project namespace, the name of the target project minus the environment suffix (-tool, -dev, -test, -prod).
        Used by the 'init' command to set the target project for all subsequent operations.
+
+    -s Optional - Application Suffix
+       Used by the 'init' and 'deploy' commands to set the application suffix for all subsequent deployment operations.
+       You can use this to deploy multiple named application instances in the same environment.
 
     -r Optional - GitHub repository URL
        Used by the 'init' command to set the GitHub for repository for all subsequent build operations.
@@ -84,12 +90,13 @@ export APPLY_LOCAL_SETTINGS=1
 # - The 'getopts' options string must start with ':' for this to work.
 # -----------------------------------------------------------------------------------------------------------------
 while [ ${OPTIND} -le $# ]; do
-  if getopts :n:r:b: FLAG; then
+  if getopts :n:r:b:s: FLAG; then
     case ${FLAG} in
       # List of local options:
       n) PROJECT_NAMESPACE=$OPTARG ;;
       r) GIT_URI=$OPTARG ;;
       b) GIT_REF=$OPTARG ;;
+      s) SUFFIX=$OPTARG ;;
 
       # Pass unrecognized options ...
       \?) pass+=" -${OPTARG}" ;;
@@ -231,8 +238,8 @@ updateParams() {
     _configType=${1}
     _imageTag=${2}
 
-    _allureURL="allure-${PROJECT_NAMESPACE}-${_imageTag}.apps.silver.devops.gov.bc.ca"
-
+    _allureURL="allure${SUFFIX:+-${SUFFIX}}-${PROJECT_NAMESPACE}-${_imageTag}.apps.silver.devops.gov.bc.ca"
+    
     _paramFiles=$(find . -name "*${_configType}.local.param")
     for paramFile in ${_paramFiles}; do
       # Uncomment and update the required deployment settings ...
@@ -248,6 +255,11 @@ updateParams() {
       _parameterFilters="${_parameterFilters}s~\(^ALLURE_PUBLIC_API_URL=\).*$~\1https://${_allureURL}~;"
       _parameterFilters="${_parameterFilters}s~\(^ALLURE_URL=\).*$~\1${_allureURL}~;"
 
+      if [ ! -z "${SUFFIX}" ]; then
+        _parameterFilters="${_parameterFilters}/SUFFIX/s~^#.~~;"
+        _parameterFilters="${_parameterFilters}s~\(^SUFFIX=\).*$~\1-${SUFFIX}~;"
+      fi
+
       cat ${paramFile} | sed ${_parameterFilters} > ${paramFile}.tmp
       rm ${paramFile}
       mv ${paramFile}.tmp ${paramFile}
@@ -261,7 +273,9 @@ deployApp(){
 
     # Deploy or update the configuration ...
     updateDeploymentParams ${DEPLOYMENT_ENV_NAME}
-    if dcExists "allure-ui"; then
+
+    dcName="allure-ui${SUFFIX:+-${SUFFIX}}"
+    if dcExists "${dcName}"; then
       OPERATION=update genDepls.sh -u -l
     else
       genDepls.sh -l
@@ -311,10 +325,12 @@ initialize(){
   echo "  Project namespace: ${PROJECT_NAMESPACE}"
   echo "  Source Repository (used for optional builds): ${GIT_URI}"
   echo "  Source branch (used for optional builds): ${GIT_REF}"
+  if [ ! -z "${SUFFIX}" ]; then
+    echo "  Application Suffix: -${SUFFIX}"
+  fi
 }
 # =================================================================================================================
 pushd ${SCRIPT_HOME} >/dev/null
-shift
 
 case "${_cmd}" in
   init)

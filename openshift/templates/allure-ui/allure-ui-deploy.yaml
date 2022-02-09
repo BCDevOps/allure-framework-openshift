@@ -1,9 +1,9 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: ${NAME}-template
+  name: ${NAME}${SUFFIX}-template
   labels:
-    name: ${NAME}-template
+    name: ${NAME}${SUFFIX}-template
 objects:
   - kind: NetworkPolicy
     apiVersion: networking.k8s.io/v1
@@ -12,7 +12,7 @@ objects:
       labels:
         name: ${NAME}${SUFFIX}-allow-ingress
         app: ${APP_NAME}${SUFFIX}
-        app-group: ${APP_GROUP}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -38,8 +38,8 @@ objects:
       generation: 1
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -60,16 +60,16 @@ objects:
       test: false
       selector:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-ui
         env: ${TAG_NAME}
       template:
         metadata:
           labels:
             name: ${NAME}${SUFFIX}
-            app: ${APP_NAME}
-            app-group: ${APP_GROUP}
+            app: ${APP_NAME}${SUFFIX}
+            app-group: ${APP_GROUP}${SUFFIX}
             role: allure-ui
             env: ${TAG_NAME}
         spec:
@@ -115,8 +115,8 @@ objects:
       name: ${NAME}${SUFFIX}
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -134,8 +134,8 @@ objects:
       name: ${NAME}${SUFFIX}
       labels:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-ui
         env: ${TAG_NAME}
     spec:
@@ -146,8 +146,8 @@ objects:
           targetPort: 5252
       selector:
         name: ${NAME}${SUFFIX}
-        app: ${APP_NAME}
-        app-group: ${APP_GROUP}
+        app: ${APP_NAME}${SUFFIX}
+        app-group: ${APP_GROUP}${SUFFIX}
         role: allure-ui
         env: ${TAG_NAME}
       type: ClusterIP
